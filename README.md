@@ -27,8 +27,11 @@ GDPR-compliant consent management with SSR Blade templates, Tailwind styling and
 
 ## Installation
 
+Since the package is not yet published on Packagist, add the GitHub repository and install:
+
 ```bash
-composer require mmoollllee/filament-consent-control
+composer config repositories.filament-consent-control vcs https://github.com/mmoollllee/filament-consent-control
+composer require mmoollllee/filament-consent-control:dev-main
 ```
 
 Publish config and assets:
