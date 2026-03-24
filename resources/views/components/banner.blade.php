@@ -22,7 +22,7 @@
     @consent-control-open.window="open()"
     :class="{
         'translate-x-[calc(100%+2rem)]': collapsed && hide,
-        '!max-w-xs !p-3': collapsed
+        '!max-w-xs': collapsed
     }"
     class="flex flex-col gap-2 fixed bottom-0 right-0 z-[9999] w-full max-w-md overflow-auto rounded-md bg-white text-center text-sm text-gray-800 shadow-lg transition-all duration-500 sm:bottom-4 sm:right-4 sm:w-[calc(100%-2rem)] sm:max-w-lg"
     role="dialog"

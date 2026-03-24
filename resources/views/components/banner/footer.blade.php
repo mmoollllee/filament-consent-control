@@ -7,7 +7,7 @@
     </button>
 </div>
 
-<div class="flex flex-wrap items-center justify-center" :class="collapsed ? 'gap-1 pb-2 px-3' : 'gap-2 pb-4 px-4'">
+<div class="flex flex-wrap items-center justify-center" :class="collapsed ? 'gap-1 pb-3 px-3' : 'gap-2 pb-4 px-4'">
     <button
         x-show="!collapsed"
         @click="collapsed = true"

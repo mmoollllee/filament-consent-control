@@ -1,6 +1,6 @@
 @props(['links' => []])
 
-<header :class="collapsed ? 'pt-2 px-3' : 'pt-4 px-4'">
+<header class="pt-4 px-4">
     <h3 x-show="!collapsed" class="mb-1 text-base font-semibold">
         {{ __('consent-control::consent.banner.title') }}
     </h3>
