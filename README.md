@@ -1,29 +1,29 @@
 # Filament Consent Control
 
-Cookie-Consent-Banner und Content-Blocking für Laravel Filament mit AlpineJS.
+Cookie consent banner and content blocking for Laravel Filament with AlpineJS.
 
-GDPR-konforme Consent-Verwaltung mit SSR Blade-Templates, Tailwind-Styling und einem Filament RichEditor Plugin zum Einbetten von Iframes.
+GDPR-compliant consent management with SSR Blade templates, Tailwind styling and a Filament RichEditor plugin for embedding iframes.
 
 ## Features
 
-- Consent-Banner mit klappbarer UI und Tailwind-Styling
-- Konfigurierbare Consent-Kategorien (Notwendige, Analytics, Funktionell, ...)
-- Script-Loading und Inline-JS bei Consent-Erteilung
-- Iframe-Blocking mit Overlay bis Consent erteilt
-- Conditional Content via `<x-consent-control-gate>`
-- Filament RichEditor Plugin zum Einbetten von consent-geschützten Iframes
-- Einbettbare Filament-Formular-Komponente für Settings
-- Flexibles Driver-Pattern: Config-File oder Database
-- Mehrsprachig (DE/EN, erweiterbar)
-- Cookie-Format abwärtskompatibel zum [consent-control](https://www.npmjs.com/package/consent-control) NPM-Package
+- Consent banner with collapsible UI and Tailwind styling
+- Configurable consent categories (Necessary, Analytics, Functional, ...)
+- Script loading and inline JS on consent
+- Iframe blocking with overlay until consent is granted
+- Conditional content via `<x-consent-control-gate>`
+- Filament RichEditor plugin for embedding consent-protected iframes
+- Embeddable Filament form component for settings
+- Flexible driver pattern: config file or Eloquent (JSON field)
+- Multi-language (DE/EN, extensible)
+- Cookie format backwards-compatible with the [consent-control](https://www.npmjs.com/package/consent-control) NPM package
 
-## Voraussetzungen
+## Requirements
 
 - PHP 8.2+
 - Laravel 11.28+
 - Filament 5.0+
-- AlpineJS (in Filament/Livewire bereits enthalten)
-- Tailwind CSS (empfohlen, Standalone-CSS als Fallback verfügbar)
+- AlpineJS (included in Filament/Livewire)
+- Tailwind CSS
 
 ## Installation
 
@@ -31,28 +31,27 @@ GDPR-konforme Consent-Verwaltung mit SSR Blade-Templates, Tailwind-Styling und e
 composer require mmoollllee/filament-consent-control
 ```
 
-Config und Assets publishen:
+Publish config and assets:
 
 ```bash
 php artisan vendor:publish --tag=consent-control-config
 php artisan vendor:publish --tag=consent-control-assets
-php artisan filament:assets
 ```
 
-Optional - Database-Driver:
+Add the package views as a Tailwind source so utility classes used by the banner are included in your CSS build:
 
-```bash
-php artisan vendor:publish --tag=consent-control-migrations
-php artisan migrate
+```css
+/* resources/css/app.css */
+@source '../../vendor/mmoollllee/filament-consent-control/resources/views/components/**/*.blade.php';
 ```
 
-## Konfiguration
+## Configuration
 
-### Config-File (`config/consent-control.php`)
+### Config File (`config/consent-control.php`)
 
 ```php
 return [
-    'driver' => env('CONSENT_CONTROL_DRIVER', 'config'), // 'config' oder 'database'
+    'driver' => env('CONSENT_CONTROL_DRIVER', 'config'), // 'config' or 'eloquent'
 
     'cookie' => [
         'name' => 'consentcontrol',
@@ -68,12 +67,12 @@ return [
 
     'categories' => [
         'necessary' => [
-            'label' => 'Notwendige',
-            'description' => 'Stellt die Funktionalität der Website sicher.',
+            'label' => 'Necessary',
+            'description' => 'Ensures the functionality of the website.',
             'checked' => true,
             'disabled' => true,
             'children' => [
-                ['label' => 'Seiten-Einstellungen', 'description' => '...'],
+                ['label' => 'Site Settings', 'description' => '...'],
             ],
             'scripts' => [],
             'inline_script' => null,
@@ -86,37 +85,54 @@ return [
             'inline_script' => "window.dataLayer = window.dataLayer || [];",
         ],
         'functional' => [
-            'label' => 'Funktionell',
+            'label' => 'Functional',
         ],
     ],
 
     'links' => [
-        'privacy' => '/datenschutz/',
-        'imprint' => '/impressum/',
+        'privacy' => '/privacy/',
     ],
 ];
 ```
 
-### Database-Driver
+### Eloquent Driver
+
+Store consent settings as JSON in any of your existing models instead of a separate table.
 
 In `.env`:
 
 ```
-CONSENT_CONTROL_DRIVER=database
+CONSENT_CONTROL_DRIVER=eloquent
 ```
 
-## Frontend-Nutzung
+In `config/consent-control.php`:
 
-### JS einbinden
+```php
+'eloquent' => [
+    'model' => App\Models\Setting::class,
+    'field' => 'consent_settings',
+    'record_id' => 1,
+],
+```
 
-**Option A: Über Vite (empfohlen)**
+Your model needs a JSON cast:
+
+```php
+protected $casts = ['consent_settings' => 'array'];
+```
+
+## Frontend Usage
+
+### Include JS
+
+**Option A: Via Vite (recommended)**
 
 ```js
 // resources/js/app.js
 import '../../vendor/mmoollllee/filament-consent-control/resources/dist/js/consent-control.js';
 ```
 
-**Option B: Als Script-Tag**
+**Option B: As script tag**
 
 ```blade
 <x-consent-control-scripts />
@@ -128,7 +144,7 @@ import '../../vendor/mmoollllee/filament-consent-control/resources/dist/js/conse
 <x-consent-control-banner />
 ```
 
-### Iframe mit Consent schützen
+### Protect Iframe with Consent
 
 ```blade
 <x-consent-control-message
@@ -140,7 +156,7 @@ import '../../vendor/mmoollllee/filament-consent-control/resources/dist/js/conse
 />
 ```
 
-### Custom Content mit Consent
+### Custom Content with Consent
 
 ```blade
 <x-consent-control-message consent="functional" type="custom" src-name="OpenStreetMap">
@@ -148,23 +164,23 @@ import '../../vendor/mmoollllee/filament-consent-control/resources/dist/js/conse
 </x-consent-control-message>
 ```
 
-### Bedingte Anzeige
+### Conditional Display
 
 ```blade
 <x-consent-control-gate consent="analytics">
-    <p>Dieser Inhalt wird nur angezeigt wenn Analytics erlaubt ist.</p>
+    <p>This content is only shown when analytics consent is granted.</p>
 </x-consent-control-gate>
 ```
 
-### Banner wieder öffnen
+### Re-open Banner
 
 ```blade
-<button @click="$dispatch('consent-control-open')">Cookie-Einstellungen</button>
+<button @click="$dispatch('consent-control-open')">Cookie Settings</button>
 ```
 
-## Filament-Integration
+## Filament Integration
 
-### Plugin registrieren
+### Register Plugin
 
 ```php
 // app/Providers/Filament/AdminPanelProvider.php
@@ -173,38 +189,26 @@ import '../../vendor/mmoollllee/filament-consent-control/resources/dist/js/conse
 ])
 ```
 
-### Settings-Formular einbetten
+### Embed Settings Form
+
+The `ConsentSettingsForm::make()` returns a Filament form group that stores all settings as JSON in a single field on your model.
 
 ```php
 use Mmoollllee\FilamentConsentControl\Filament\ConsentSettingsForm;
-use Mmoollllee\FilamentConsentControl\ConsentControlManager;
 
-class SiteSettings extends Page
+class SiteSettingsResource extends Resource
 {
-    public ?array $data = [];
-
-    public function mount(): void
-    {
-        $this->form->fill(
-            app(ConsentControlManager::class)->getAllConfig()
-        );
-    }
-
-    public function form(Form $form): Form
+    public static function form(Form $form): Form
     {
         return $form->schema([
-            ...ConsentSettingsForm::make(),
-        ])->statePath('data');
-    }
-
-    public function save(): void
-    {
-        app(ConsentControlManager::class)->save($this->form->getState());
+            ConsentSettingsForm::make('consent_settings'),
+            // ... other fields
+        ]);
     }
 }
 ```
 
-### RichEditor Iframe-Plugin
+### RichEditor Iframe Plugin
 
 ```php
 use Filament\Forms\Components\RichEditor;
@@ -218,37 +222,37 @@ RichEditor::make('body')
 
 ## Blade Components
 
-| Component | Beschreibung |
+| Component | Description |
 |---|---|
-| `<x-consent-control-banner />` | Consent-Banner |
-| `<x-consent-control-message consent="..." src="..." />` | Iframe/Content mit Consent-Overlay |
-| `<x-consent-control-gate consent="...">` | Zeigt Slot nur bei erteiltem Consent |
-| `<x-consent-control-scripts />` | Lädt JS (+ optional CSS) |
+| `<x-consent-control-banner />` | Consent banner |
+| `<x-consent-control-message consent="..." src="..." />` | Iframe/content with consent overlay |
+| `<x-consent-control-gate consent="...">` | Shows slot only when consent is granted |
+| `<x-consent-control-scripts />` | Loads JS |
 
-### Message-Props
+### Message Props
 
-| Prop | Typ | Default | Beschreibung |
+| Prop | Type | Default | Description |
 |---|---|---|---|
-| `consent` | string | *required* | Consent-Kategorie |
-| `src` | string | null | Iframe-URL |
-| `src-name` | string | auto | Anzeigename |
-| `type` | string | `iframe` | `iframe` oder `custom` |
-| `width` | int | null | Iframe-Breite |
-| `height` | int | null | Iframe-Höhe |
+| `consent` | string | *required* | Consent category |
+| `src` | string | null | Iframe URL |
+| `src-name` | string | auto | Display name |
+| `type` | string | `iframe` | `iframe` or `custom` |
+| `width` | int | null | Iframe width |
+| `height` | int | null | Iframe height |
 
 ## AlpineJS Events
 
-| Event | Beschreibung |
+| Event | Description |
 |---|---|
-| `consent-control-open` | Banner öffnen: `$dispatch('consent-control-open')` |
-| `consent-updated` | Wird nach Consent-Änderung dispatcht |
+| `consent-control-open` | Open banner: `$dispatch('consent-control-open')` |
+| `consent-updated` | Dispatched after consent changes |
 
-## Cookie-Format
+## Cookie Format
 
 ```
 consentcontrol=necessary|analytics|functional
 ```
 
-## Lizenz
+## License
 
 MIT
