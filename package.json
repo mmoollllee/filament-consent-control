@@ -1,0 +1,11 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "node build.js"
+    },
+    "devDependencies": {
+        "@tiptap/core": "^2.0",
+        "esbuild": "^0.20"
+    }
+}
