@@ -1,217 +1,92 @@
 # Filament Consent Control
 
-Cookie consent banner and content blocking for Laravel Filament with AlpineJS.
+The **Filament admin layer** for [consent-control](https://github.com/mmoollllee/consent-control):
+an opt-in settings page/form and a RichEditor plugin for embedding consent-gated iframes.
 
-GDPR-compliant consent management with SSR Blade templates, Tailwind styling and a Filament RichEditor plugin for embedding iframes.
+Part of a three-package stack:
 
-## Features
+| Package | Role |
+|---|---|
+| [`consent-control`](https://github.com/mmoollllee/consent-control) (npm) | Framework-agnostic runtime + CSS. |
+| [`laravel-consent-control`](https://github.com/mmoollllee/laravel-consent-control) | Blade components, config, drivers, translations, server helpers. |
+| **`filament-consent-control`** (this package) | Filament settings UI + RichEditor consent-iframe plugin. |
 
-- Consent banner with collapsible UI and Tailwind styling
-- Configurable consent categories (Necessary, Analytics, Functional, ...)
-- Script loading and inline JS on consent
-- Iframe blocking with overlay until consent is granted
-- Conditional content via `<x-consent-control-gate>`
-- Filament RichEditor plugin for embedding consent-protected iframes
-- Embeddable Filament form component for settings
-- Flexible driver pattern: config file or Eloquent (JSON field)
-- Multi-language (DE/EN, extensible)
-- Cookie format backwards-compatible with the [consent-control](https://www.npmjs.com/package/consent-control) NPM package
+The frontend banner, blocking and configuration come from `laravel-consent-control`
+(installed automatically). **A single config file is enough** — this package only adds
+optional admin convenience on top.
 
 ## Requirements
 
-- PHP 8.2+
-- Laravel 11.28+
-- Filament 5.0+
-- AlpineJS (included in Filament/Livewire)
-- Tailwind CSS
+- PHP 8.2+ · Laravel 11.28+ / 12 · Filament 5
 
 ## Installation
 
-Since the package is not yet published on Packagist, add the GitHub repository and install:
-
 ```bash
-composer config repositories.filament-consent-control vcs https://github.com/mmoollllee/filament-consent-control
-composer require mmoollllee/filament-consent-control:dev-main
+composer require mmoollllee/filament-consent-control
 ```
 
-Publish config and assets:
+This pulls in `laravel-consent-control`. Publish its config and runtime assets, then set
+up the frontend as described in [its README](https://github.com/mmoollllee/laravel-consent-control):
 
 ```bash
 php artisan vendor:publish --tag=consent-control-config
 php artisan vendor:publish --tag=consent-control-assets
 ```
 
-Add the package views as a Tailwind source so utility classes used by the banner are included in your CSS build:
-
-```css
-/* resources/css/app.css */
-@source '../../vendor/mmoollllee/filament-consent-control/resources/views/components/**/*.blade.php';
-```
-
-## Configuration
-
-### Config File (`config/consent-control.php`)
+Register the plugin in your panel (does nothing by itself unless you opt in below):
 
 ```php
-return [
-    'driver' => env('CONSENT_CONTROL_DRIVER', 'config'), // 'config' or 'eloquent'
+use Mmoollllee\FilamentConsentControl\ConsentControlPlugin;
 
-    'cookie' => [
-        'name' => 'consentcontrol',
-        'days' => 365,
-        'domain' => parse_url(config('app.url', ''), PHP_URL_HOST),
-    ],
-
-    'banner' => [
-        'animated' => true,
-        'start_collapsed' => true,
-        'position' => 'bottom-right',
-    ],
-
-    'categories' => [
-        'necessary' => [
-            'label' => 'Necessary',
-            'description' => 'Ensures the functionality of the website.',
-            'checked' => true,
-            'disabled' => true,
-            'children' => [
-                ['label' => 'Site Settings', 'description' => '...'],
-            ],
-            'scripts' => [],
-            'inline_script' => null,
-        ],
-        'analytics' => [
-            'label' => 'Analytics',
-            'scripts' => [
-                ['src' => 'https://www.googletagmanager.com/gtag/js?id=G-XXXXX', 'async' => true],
-            ],
-            'inline_script' => "window.dataLayer = window.dataLayer || [];",
-        ],
-        'functional' => [
-            'label' => 'Functional',
-        ],
-    ],
-
-    'links' => [
-        'privacy' => '/privacy/',
-    ],
-];
+public function panel(Panel $panel): Panel
+{
+    return $panel->plugins([
+        ConsentControlPlugin::make(),
+    ]);
+}
 ```
 
-### Eloquent Driver
+## Editing settings in Filament (opt-in)
 
-Store consent settings as JSON in any of your existing models instead of a separate table.
+By default settings are read from `config/consent-control.php`. To edit them at runtime,
+opt in to the **eloquent driver** and one of the two admin options below.
 
-In `.env`:
-
-```
+```env
 CONSENT_CONTROL_DRIVER=eloquent
 ```
 
-In `config/consent-control.php`:
-
 ```php
+// config/consent-control.php
 'eloquent' => [
-    'model' => App\Models\Setting::class,
+    'model' => App\Models\Setting::class,   // needs: $casts = ['consent_settings' => 'array']
     'field' => 'consent_settings',
     'record_id' => 1,
 ],
 ```
 
-Your model needs a JSON cast:
+### Option A — ready-made settings page
 
 ```php
-protected $casts = ['consent_settings' => 'array'];
+ConsentControlPlugin::make()->settingsPage();
 ```
 
-## Frontend Usage
+Adds a "Consent Settings" page to the panel that reads/writes the configured model.
 
-### Include JS
-
-**Option A: Via Vite (recommended)**
-
-```js
-// resources/js/app.js
-import '../../vendor/mmoollllee/filament-consent-control/resources/dist/js/consent-control.js';
-```
-
-**Option B: As script tag**
-
-```blade
-<x-consent-control-scripts />
-```
-
-### Banner
-
-```blade
-<x-consent-control-banner />
-```
-
-### Protect Iframe with Consent
-
-```blade
-<x-consent-control-message
-    consent="functional"
-    src="https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
-    src-name="YouTube"
-    :width="560"
-    :height="315"
-/>
-```
-
-### Custom Content with Consent
-
-```blade
-<x-consent-control-message consent="functional" type="custom" src-name="OpenStreetMap">
-    <div id="map" style="height: 400px"></div>
-</x-consent-control-message>
-```
-
-### Conditional Display
-
-```blade
-<x-consent-control-gate consent="analytics">
-    <p>This content is only shown when analytics consent is granted.</p>
-</x-consent-control-gate>
-```
-
-### Re-open Banner
-
-```blade
-<button @click="$dispatch('consent-control-open')">Cookie Settings</button>
-```
-
-## Filament Integration
-
-### Register Plugin
-
-```php
-// app/Providers/Filament/AdminPanelProvider.php
-->plugins([
-    \Mmoollllee\FilamentConsentControl\ConsentControlPlugin::make(),
-])
-```
-
-### Embed Settings Form
-
-The `ConsentSettingsForm::make()` returns a Filament form group that stores all settings as JSON in a single field on your model.
+### Option B — embed the form in your own resource/page
 
 ```php
 use Mmoollllee\FilamentConsentControl\Filament\ConsentSettingsForm;
 
-class SiteSettingsResource extends Resource
+public function form(Schema $schema): Schema
 {
-    public static function form(Form $form): Form
-    {
-        return $form->schema([
-            ConsentSettingsForm::make('consent_settings'),
-            // ... other fields
-        ]);
-    }
+    return $schema->components([
+        ConsentSettingsForm::make('consent_settings'),
+        // ... your other fields
+    ]);
 }
 ```
 
-### RichEditor Iframe Plugin
+## RichEditor: embed consent-gated iframes
 
 ```php
 use Filament\Forms\Components\RichEditor;
@@ -220,42 +95,15 @@ use Mmoollllee\FilamentConsentControl\Filament\ConsentIframePlugin;
 RichEditor::make('body')
     ->plugins([
         ConsentIframePlugin::make(),
-    ])
+    ]);
 ```
 
-## Blade Components
-
-| Component | Description |
-|---|---|
-| `<x-consent-control-banner />` | Consent banner |
-| `<x-consent-control-message consent="..." src="..." />` | Iframe/content with consent overlay |
-| `<x-consent-control-gate consent="...">` | Shows slot only when consent is granted |
-| `<x-consent-control-scripts />` | Loads JS |
-
-### Message Props
-
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `consent` | string | *required* | Consent category |
-| `src` | string | null | Iframe URL |
-| `src-name` | string | auto | Display name |
-| `type` | string | `iframe` | `iframe` or `custom` |
-| `width` | int | null | Iframe width |
-| `height` | int | null | Iframe height |
-
-## AlpineJS Events
-
-| Event | Description |
-|---|---|
-| `consent-control-open` | Open banner: `$dispatch('consent-control-open')` |
-| `consent-updated` | Dispatched after consent changes |
-
-## Cookie Format
-
-```
-consentcontrol=necessary|analytics|functional
-```
+The toolbar gets an "Embed iframe" action (URL, consent category, width, height). Pasted
+YouTube/Vimeo links are auto-converted to privacy-friendly embed URLs (YouTube → nocookie). Stored
+iframes are rendered on the frontend as blocked `.consent-message--wrapper` markup
+(`data-src`) and only load once the visitor grants the chosen category — handled by the
+shared runtime, so make sure `<x-consent-control-scripts />` is on the page.
 
 ## License
 
-MIT
+MIT. See [LICENSE.md](LICENSE.md).

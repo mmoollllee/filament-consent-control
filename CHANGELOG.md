@@ -1,0 +1,26 @@
+# Changelog
+
+All notable changes to `filament-consent-control` will be documented in this file.
+
+## 0.1.0 - 2026-07-09
+
+Re-architected as the **Filament layer** on top of
+[`mmoollllee/laravel-consent-control`](https://github.com/mmoollllee/laravel-consent-control)
+(which itself builds on the [`consent-control`](https://github.com/mmoollllee/consent-control) npm runtime).
+
+### Changed
+- The frontend banner, Blade components, config, translations and runtime now live in
+  `laravel-consent-control`; this package only provides the Filament admin UI.
+- `ConsentControlPlugin` is now functional and **opt-in**: `->settingsPage()` registers a
+  ready-made settings page. Without it, a single config file is enough.
+- `ConsentSettingsForm` labels are translatable; updated to the Filament v5 Schema API.
+
+### Added
+- Pasted YouTube/Vimeo URLs in the RichEditor are auto-normalised to privacy-friendly
+  embed URLs (YouTube → youtube-nocookie).
+
+### Fixed
+- RichEditor consent-iframe is no longer broken: the JS command matches the PHP action
+  (`setConsentIframe`), the undefined `getYouTube/Vimeo` helpers are gone, and stored
+  iframes now render as blocked `.consent-message--wrapper` markup (`data-src`) so they
+  are actually gated until consent — wired by the shared runtime.
