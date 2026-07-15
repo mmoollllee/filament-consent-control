@@ -2,6 +2,16 @@
 
 All notable changes to `filament-consent-control` will be documented in this file.
 
+## 0.1.1 - 2026-07-15
+
+### Fixed
+- RichEditor consent-iframe extension failed to load in the browser
+  (`TypeError: Module name, '@tiptap/core' does not resolve to a valid URL`).
+  The build now resolves `@tiptap/core` from Filament's shared
+  `window.FilamentRichEditor.tiptap` instance instead of emitting a bare import,
+  following Filament's "Sharing the bundled TipTap/ProseMirror instance" guidance
+  (no duplicate ProseMirror, no broken `instanceof` checks).
+
 ## 0.1.0 - 2026-07-09
 
 Re-architected as the **Filament layer** on top of
