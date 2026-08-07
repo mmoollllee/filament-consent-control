@@ -2,6 +2,19 @@
 
 All notable changes to `filament-consent-control` will be documented in this file.
 
+## Unreleased
+
+### Added
+- Cookie-settings button as a **merge tag / shortcode** for sites on
+  `mmoollllee/filament-cms`: editors pick "Cookie-Einstellungen (Button)" in the RichEditor
+  or write `[consent_settings label="…" class="…"]` instead of typing raw HTML. Registers
+  itself on boot and stays a no-op without the CMS (needs the filament-cms version that
+  ships `Shortcodes::registerMergeTag()`).
+- `Support\ConsentSettingsButton::html()` — the reopen-button markup for own views.
+- Package translations (`filament-consent-control::consent`, de + en) for the button label
+  and the merge-tag menu entry; publish with
+  `vendor:publish --tag=filament-consent-control-translations`.
+
 ## 0.1.1 - 2026-07-15
 
 ### Fixed

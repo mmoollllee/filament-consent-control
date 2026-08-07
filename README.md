@@ -81,6 +81,31 @@ with the `consent-control--open` class anywhere — the runtime binds it automat
 <button type="button" class="consent-control--open">Cookie-Einstellungen ändern</button>
 ```
 
+### Merge tag for editors (filament-cms)
+
+On a site running [`mmoollllee/filament-cms`](https://github.com/mmoollllee/filament-cms) that
+button is available to editors without typing HTML: the package registers itself with the
+CMS shortcode registry on boot — nothing to wire up.
+
+- **RichEditor** — pick *"Cookie-Einstellungen (Button)"* from the merge-tag menu.
+- **Any rich text** — write the `[consent_settings]` shortcode, optionally with a custom
+  label and extra CSS classes (the trigger class is always kept):
+
+  ```text
+  [consent_settings]
+  [consent_settings label="Cookies verwalten" class="btn btn-primary"]
+  ```
+
+The label defaults to `filament-consent-control::consent.reopen_button` — publish the
+translations to change it globally:
+
+```bash
+php artisan vendor:publish --tag=filament-consent-control-translations
+```
+
+Without filament-cms (or on a version older than `Shortcodes::registerMergeTag()`) nothing is
+registered; `Support\ConsentSettingsButton::html()` renders the same markup for your own views.
+
 ## Editing settings in Filament (opt-in)
 
 By default settings are read from `config/consent-control.php`. To edit them at runtime,
